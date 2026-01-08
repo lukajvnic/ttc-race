@@ -1,0 +1,58 @@
+=== TTC RACE - KAFKA + KUBERNETES SETUP ===
+
+--- FIRST TIME SETUP ---
+
+1) START MINIKUBE
+   minikube start --driver=docker --memory=6144 --cpus=4
+
+2) CREATE NAMESPACE
+   kubectl create namespace ttc-race   
+
+3) INSTALL STRIMZI 
+   kubectl apply -f 'https://strimzi.io/install/latest?namespace=ttc-race' -n ttc-race
+
+4) WAIT FOR STRIMZI OPERATOR (until Running)
+   kubectl get pods -n ttc-race -w
+
+5) APPLY YAML FILES (order matters!)
+   kubectl apply -f ttc-race-nodepool.yml -n ttc-race
+   kubectl apply -f ttc-race-kafka.yml -n ttc-race
+   kubectl apply -f ttc-race-topic.yml -n ttc-race
+
+6) WAIT FOR KAFKA TO BE READY
+   kubectl get pods -n ttc-race -w
+   (wait until ttc-cluster-dual-role-0 shows 1/1 Running)
+
+7) ADD /etc/hosts ENTRY (WSL - one time only)
+   echo "127.0.0.1 ttc-cluster-dual-role-0.ttc-cluster-kafka-brokers.ttc-race.svc" | sudo tee -a /etc/hosts
+
+--- RUNNING THE PROJECT ---
+
+Terminal 1 - Port Forward (keep open):
+   kubectl port-forward svc/ttc-cluster-kafka-bootstrap 9092:9092 -n ttc-race
+
+Terminal 2 - Consumer:
+   cd /mnt/c/dev/proj/ttc && python3 test_consumer.py
+
+Terminal 3 - Producer:
+   cd /mnt/c/dev/proj/ttc && python3 main.py
+
+--- STOPPING/RESTARTING ---
+
+STOP:
+   minikube stop
+
+RESTART (existing setup):
+   minikube start
+   kubectl port-forward svc/ttc-cluster-kafka-bootstrap 9092:9092 -n ttc-race
+
+--- TROUBLESHOOTING ---
+
+Check pods:
+   kubectl get pods -n ttc-race
+
+Check Kafka logs:
+   kubectl logs ttc-cluster-dual-role-0 -n ttc-race --tail=50
+
+Check topic exists:
+   kubectl get kafkatopics -n ttc-race

@@ -1,0 +1,10 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: ttc-race
+  labels:
+    strimzi.io/cluster: ttc-cluster
+  namespace: ttc-race
+spec:
+  partitions: 3
+  replicas: 1

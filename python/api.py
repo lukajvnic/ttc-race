@@ -23,11 +23,21 @@ def fetch_speeds():
         print(f"Failed to fetch: {resp.status_code}")
 
 
-def main():
+def get_leaderboard(top=5):
     speeds = fetch_speeds()
-
+    
+    leaderboard = []
     for route, speeds in speeds.items():
-        print(f"{route}: {sum(speeds) / len(speeds)}")
+        leaderboard.append((route, sum(speeds) / len(speeds)))
+    
+    leaderboard.sort(key=lambda x: x[1], reverse=True)
+    
+    return leaderboard[:top]
 
 
-main()
+def main():
+    print(get_leaderboard())
+
+
+if __name__ == "__main__":
+    main()
